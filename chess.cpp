@@ -222,6 +222,14 @@ string stringifyCoord(int x, int y) {
   return first2 + second;
 }
 
+pair<pair <int, int>, pair <int, int>> destringifyCoord(string move) {
+  int i0 = 8 - (move.at(1) - '0');
+  int j0 = move.at(0) - 'a';
+  int i1 = 8 - (move.at(3) - '0');
+  int j1 = move.at(2) - 'a';
+  return pair<pair <int, int>, pair <int, int>>(pair<int, int>(i0, j0), pair<int, int>(i1, j1));
+}
+
 int checkLegalMove(string move) {
   // -1 is illegal, 1 is normal, 2 is en passant, 3 is castle, 4 is promotion
   // illegal move length
@@ -325,6 +333,10 @@ int checkLegalMove(string move) {
 }
 
 void getLegalMoves() {
+  for(int i = 0; i < 2; i++) {
+    moves[i].clear();
+  }
+
   int compareSide = side;
 
   if (compareSide == -1) {
@@ -356,10 +368,29 @@ void getLegalMoves() {
 }
 
 string chooseMove() {
-  
+  if (moves[1].size()) {
+    // take move
+    return moves[1][0];  
+  } else {
+    // other move
+    if (moves[0].size()) {
+      return moves[0][0];
+    } else {
+      return "NO MOVE POSSIBLE";
+    }
+  }
 }
 
 void makeMove(string move) {
+  /*
+  Castling
+  En passant
+  Pawn advance by two spaces
+  Draw by repetition
+  50-move rule
+  */
+
+
   int moveType = checkLegalMove(move);
   // -1 is illegal, 1 is normal, 2 is en passant, 3 is castle, 4 is promotion
   if (moveType == -1) {
@@ -407,6 +438,7 @@ int main(int argc, char *argv[]) {
 
   movesetInit(side);
 
+  // what's happening below here
   string s;
   while (true)
   {
