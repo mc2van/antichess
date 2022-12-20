@@ -222,12 +222,21 @@ string stringifyCoord(int x, int y) {
   return first2 + second;
 }
 
-pair<pair <int, int>, pair <int, int>> destringifyCoord(string move) {
-  int i0 = 8 - (move.at(1) - '0');
-  int j0 = move.at(0) - 'a';
-  int i1 = 8 - (move.at(3) - '0');
-  int j1 = move.at(2) - 'a';
-  return pair<pair <int, int>, pair <int, int>>(pair<int, int>(i0, j0), pair<int, int>(i1, j1));
+int destringifyCoord(string move, int ind) {
+  switch (ind) {
+    case 1:
+      return 8 - (move.at(1) - '0');
+      break;
+    case 2:
+      return move.at(0) - 'a';
+      break;
+    case 3:
+      return 8 - (move.at(3) - '0');
+      break;
+    case 4:
+      return move.at(2) - 'a';
+      break;
+  }
 }
 
 int checkLegalMove(string move) {
@@ -236,12 +245,13 @@ int checkLegalMove(string move) {
   if (move.length() < 4 || move.length() > 5) {
     return -1;
   }
-  int i0 = move.at(1) - '0';
-  int j0 = move.at(0) - 'a';
-  int i1 = move.at(3) - '0';
-  int j1 = move.at(2) - 'a';
+  int i0 = destringifyCoord(move, 1);
+  int j0 = destringifyCoord(move, 2);
+  int i1 = destringifyCoord(move, 3);
+  int j1 = destringifyCoord(move, 4);
   //0-7 index checking
   if (!validIndex(i0, j0) || !validIndex(i1, j1)) {
+    cout << "here1";
     return -1;
   }
   int piece = board[i0][j0];
@@ -249,11 +259,13 @@ int checkLegalMove(string move) {
   int pieceType = piece >> 1;
   int goTo = board[i1][j1];
   // tryna take same side piece
-  if (goTo != 0 && (goTo & 1) == 1 ? BLACK : WHITE == side) {
+  if (goTo != 0 && ((WHITE == side) ? (goTo & 1) == 0 : (goTo & 1) == 1)) {
+    cout << "here2";
     return -1;
   }
   // moving wrong side
   if (side != pieceSide) {
+    cout << "here3";
     return -1;
   }
   // checks for promotion
@@ -261,24 +273,31 @@ int checkLegalMove(string move) {
     if ((move.at(4) != 'q' && move.at(4) != 'r' && move.at(4) != 'b' && move.at(4) != 'n')
     || (i0 != i1) || (side == WHITE && (j0 != 1 || j1 != 0)) 
     || (side == BLACK && (j0 != 6 || j1 != 7))) {
+      cout << "here4";
       return -1;
     }
     return 4;
   }
   // pawn moves
   if (pieceType == 1) {
+    cout << "here5";
     if (j1 == j0) {
+      cout << "here6";
       // straight moving pawn
       if (side * (i1 - i0) > 2 || side * (i1 - i0) <= 0) {
+        cout << "here7";
         return -1;
       }
       // if things are in the way
       if (board[i1][j1] != 0) {
+        cout << "here8";
         return -1;
       }
       if (board[i1][j0 + side] != 0) {
+        cout << "here9";
         return -1;
       }
+      return 1;
     } else {
       // diag capture
       if (side * (i1 - i0) != 1) {
@@ -328,7 +347,6 @@ int checkLegalMove(string move) {
     weHaveMovedKing = true;
     return 3;
   }
-  
   return -1;
 }
 
@@ -432,13 +450,28 @@ int main(int argc, char *argv[]) {
   if (string(argv[1]) == "white") {
     side = WHITE;
     cout << "e2e4";
+    makeMove("e2e4");
   } else {
     side = BLACK;
   }
 
   movesetInit(side);
 
-  // what's happening below here
+  string opp;
+  string us;
+  while(true) {
+    cin >> opp;
+    prevMove = opp;
+    makeMove(opp);
+    getLegalMoves();
+    us = chooseMove();
+    prevMove = us;
+    makeMove(us);
+    cout << us;
+  }
+
+  /*
+
   string s;
   while (true)
   {
@@ -448,4 +481,6 @@ int main(int argc, char *argv[]) {
     cout << move;
   }
   return 0;
+
+  */ 
 }
