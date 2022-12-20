@@ -253,10 +253,10 @@ int destringifyCoord(string move, int ind) {
 
 void guangDebug(int i) {
   //JUMP
-  cout << "here" << i;
+  //cout << "here" << i;
 }
 
-int checkLegalMove(string move, Side side) {
+int checkLegalMove(string move, Side curSide) {
   // -1 is illegal, 1 is normal, 2 is en passant, 3 is castle, 4 is promotion
   // illegal move length
   if (move.length() < 4 || move.length() > 5) {
@@ -276,20 +276,20 @@ int checkLegalMove(string move, Side side) {
   int pieceType = piece >> 1;
   int goTo = board[i1][j1];
   // tryna take same side piece
-  if (goTo != 0 && ((WHITE == side) ? (goTo & 1) == 0 : (goTo & 1) == 1)) {
+  if (goTo != 0 && ((WHITE == curSide) ? (goTo & 1) == 0 : (goTo & 1) == 1)) {
     guangDebug(2);
     return -1;
   }
   // moving wrong side
-  if (side != pieceSide) {
+  if (curSide != pieceSide) {
     guangDebug(3);
     return -1;
   }
   // checks for promotion
   if (move.length() == 5) {
     if ((move.at(4) != 'q' && move.at(4) != 'r' && move.at(4) != 'b' && move.at(4) != 'n')
-    || (i0 != i1) || (side == WHITE && (j0 != 1 || j1 != 0)) 
-    || (side == BLACK && (j0 != 6 || j1 != 7))) {
+    || (i0 != i1) || (curSide == WHITE && (j0 != 1 || j1 != 0)) 
+    || (curSide == BLACK && (j0 != 6 || j1 != 7))) {
       guangDebug(4);
       return -1;
     }
@@ -301,7 +301,7 @@ int checkLegalMove(string move, Side side) {
     if (j1 == j0) {
       guangDebug(6);
       // straight moving pawn
-      if (side * (i1 - i0) > 2 || side * (i1 - i0) <= 0) {
+      if (side * (i1 - i0) > 2 || curSide * (i1 - i0) <= 0) {
         guangDebug(7);
         return -1;
       }
@@ -310,14 +310,14 @@ int checkLegalMove(string move, Side side) {
         guangDebug(8);
         return -1;
       }
-      if (board[i0 + side][j0] != 0) {
+      if (board[i0 + curSide][j0] != 0) {
         guangDebug(9);
         return -1;
       }
       return 1;
     } else {
       // diag capture
-      if (side * (i1 - i0) != 1) {
+      if (curSide * (i1 - i0) != 1) {
         guangDebug(10);
         return -1;
       }
@@ -327,9 +327,9 @@ int checkLegalMove(string move, Side side) {
       }
       // en passant
       if (board[i1][j1] == 0) {
-        if (board[i0][j1] >> 1 == 1 && i0 == 4 + ((side - 1) / 2)) {
-          if (prevMove == stringifyCoord((side == WHITE) ? 1 : 6, j1) 
-          + stringifyCoord((side == WHITE) ? 3 : 4, j1)) {
+        if (board[i0][j1] >> 1 == 1 && i0 == 4 + ((curSide - 1) / 2)) {
+          if (prevMove == stringifyCoord((curSide == WHITE) ? 1 : 6, j1) 
+          + stringifyCoord((curSide == WHITE) ? 3 : 4, j1)) {
             return 2;
           }
         }
@@ -345,7 +345,7 @@ int checkLegalMove(string move, Side side) {
     if (i0 + mv.first == i1 && j0 + mv.second == j1 && !anyBlockers(i0, j0, i1, j1)) {
       guangDebug(15);
       if (pieceType == 2) {
-        if (i0 == (7 / (((side + 1) * 100000) + 1))) {
+        if (i0 == (7 / (((curSide + 1) * 100000) + 1))) {
           if (j0 == 0) {
             weHaveMovedaRook = true;
           }
@@ -359,6 +359,7 @@ int checkLegalMove(string move, Side side) {
   }
   // castles
   if ((move == "e1g1" || move == "e1c1" || move == "e8g8" || move == "e8c8") && pieceType == 6) {
+    if (curSide != side) return 3;
     int rLocation = (j1 == 6) ? 7 : 0;
     if (anyBlockers(i0, j0, i1, rLocation) || weHaveMovedKing || (rLocation == 7 && weHaveMovedhRook) || (rLocation == 0 && weHaveMovedaRook)) {
       guangDebug(13);
