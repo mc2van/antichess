@@ -256,7 +256,7 @@ void guangDebug(int i) {
   //cout << "here" << i;
 }
 
-int checkLegalMove(string move, Side curSide, vector<string> (&moves)[2], int (&board)[8][8]) {
+int checkLegalMove(string move, Side curSide, int (&board)[8][8]) {
   // -1 is illegal, 1 is normal, 2 is en passant, 3 is castle, 4 is promotion
   // illegal move length
   if (move.length() < 4 || move.length() > 5) {
@@ -392,7 +392,7 @@ void getLegalMoves(vector<string> (&moves)[2], int (&board)[8][8]) {
           int newX = i + m.first;
           int newY = j + m.second;
           string moveString = stringifyCoord(i, j) + stringifyCoord(newX, newY);
-          int moveType = checkLegalMove(moveString, side, moves, board);    
+          int moveType = checkLegalMove(moveString, side, board);    
           if (validIndex(newX, newY) && moveType != -1) {
             if (board[newX][newY] != 0 || moveType == 2) {
               //take move              
@@ -408,7 +408,37 @@ void getLegalMoves(vector<string> (&moves)[2], int (&board)[8][8]) {
   }
 }
 
+void makeMove(string move, Side side, int (&board)[8][8]);
+
 string chooseMove(vector<string> (&moves)[2], int (&board)[8][8]) {
+  if (isKingInCheck(board, side)) {
+    for (int i = 0; i < moves[1].size(); i++) {
+      int newBoard[8][8];
+      for (int j = 0; j < 8; j++) {
+        for (int k = 0; k < 8; k++) {
+          newBoard[j][k] = board[j][k];
+        }
+      }
+      // remember to i-- when removing
+      makeMove(moves[1][i], side, newBoard);
+      if (isKingInCheck(newBoard, side)) {
+        moves[1].erase(moves[1].begin() + i--);
+      }
+    }
+    for (int i = 0; i < moves[2].size(); i++) {
+      int newBoard[8][8];
+      for (int j = 0; j < 8; j++) {
+        for (int k = 0; k < 8; k++) {
+          newBoard[j][k] = board[j][k];
+        }
+      }
+      // remember to i-- when removing
+      makeMove(moves[2][i], side, newBoard);
+      if (isKingInCheck(newBoard, side)) {
+        moves[1].erase(moves[1].begin() + i--);
+      }
+    }
+  }
   if (moves[1].size()) {
     // take move
     return moves[1][0];
@@ -427,7 +457,7 @@ string chooseMove(vector<string> (&moves)[2], int (&board)[8][8]) {
   }
 }
 
-void makeMove(string move, Side side, vector<string> (&moves)[2], int (&board)[8][8]) {
+void makeMove(string move, Side side, int (&board)[8][8]) {
   /*
   Castling
   En passant
@@ -437,7 +467,7 @@ void makeMove(string move, Side side, vector<string> (&moves)[2], int (&board)[8
   */
 
 
-  int moveType = checkLegalMove(move, side, moves, board);
+  int moveType = checkLegalMove(move, side, board);
   // -1 is illegal, 1 is normal, 2 is en passant, 3 is castle, 4 is promotion
   if (moveType == -1) {
     // SnitchBot3000
@@ -502,7 +532,7 @@ int main(int argc, char *argv[]) {
     side = WHITE;
     oppside = BLACK;
     cout << "e2e4";
-    makeMove("e2e4", side, movesG, boardG);
+    makeMove("e2e4", side, boardG);
   } else {
     side = BLACK;
     oppside = WHITE;
@@ -515,11 +545,11 @@ int main(int argc, char *argv[]) {
   while(true) {
     cin >> opp;
     prevMove = opp;
-    makeMove(opp, oppside, movesG, boardG);
+    makeMove(opp, oppside, boardG);
     getLegalMoves(movesG, boardG);
     us = chooseMove(movesG, boardG);
     cout << "Our Bot Plays: " << us << endl;
-    makeMove(us, side, movesG, boardG);
+    makeMove(us, side, boardG);
     printBoard();
     // cout << us;
   }
