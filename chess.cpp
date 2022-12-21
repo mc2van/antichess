@@ -202,6 +202,18 @@ bool anyBlockers(int (&board)[8][8], int i0, int j0, int i1, int j1) {
 }
 
 bool isKingInCheck(int (&board)[8][8], int x, int y, Side kingSide) {
+  pair<int, int> kingLoc;
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
+      Side pieceSide = (board[i][j] & 1) == 1 ? BLACK : WHITE;
+      int pieceType = board[i][j] >> 1;
+      if (pieceType == 6 && pieceSide == kingSide) {
+        kingLoc.first = i;
+        kingLoc.second = j;
+      }
+    }
+  }
+  board[kingLoc.first][kingLoc.second] = 0;
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
       Side pieceSide = (board[i][j] & 1) == 1 ? BLACK : WHITE;
@@ -210,12 +222,16 @@ bool isKingInCheck(int (&board)[8][8], int x, int y, Side kingSide) {
         for (int k = 0; k < moveset[pieceType].size(); k++) {
           pair<int, int> mv = moveset[pieceType][k];
           if (i + mv.first == x && j + mv.second == y) {
-            if (!anyBlockers(board, i, j, x, y)) return true;
+            if (!anyBlockers(board, i, j, x, y)) {
+              board[kingLoc.first][kingLoc.second] = 12 + ((kingSide == BLACK) ? 1 : 0);
+              return true;
+            }
           }
         }
       }
     }
   }
+  board[kingLoc.first][kingLoc.second] = 12 + ((kingSide == BLACK) ? 1 : 0);
   return false;
 }
 
@@ -264,15 +280,15 @@ void guangDebug(int i) {
   //cout << "here" << i;
 }
 
-bool checkValidCastle(string move) {
+bool checkValidCastle(string move, Side curSide, int (&board)[8][8]) {
   if (move == "e1g1") {
-    return !(isKingInCheck(boardG, 7, 4, WHITE) || isKingInCheck(boardG, 7, 5, WHITE) || isKingInCheck(boardG, 7, 6, WHITE));
+    return !(isKingInCheck(board, 7, 4, curSide) || isKingInCheck(board, 7, 5, curSide) || isKingInCheck(board, 7, 6, curSide));
   } else if (move == "e1c1") {
-    return !(isKingInCheck(boardG, 7, 4, WHITE) || isKingInCheck(boardG, 7, 3, WHITE) || isKingInCheck(boardG, 7, 2, WHITE));
+    return !(isKingInCheck(board, 7, 4, curSide) || isKingInCheck(board, 7, 3, curSide) || isKingInCheck(board, 7, 2, curSide));
   } else if (move == "e8g8") {
-    return !(isKingInCheck(boardG, 0, 4, WHITE) || isKingInCheck(boardG, 0, 5, WHITE) || isKingInCheck(boardG, 0, 6, WHITE));
+    return !(isKingInCheck(board, 0, 4, curSide) || isKingInCheck(board, 0, 5, curSide) || isKingInCheck(board, 0, 6, curSide));
   } else { // e8c8
-    return !(isKingInCheck(boardG, 0, 4, WHITE) || isKingInCheck(boardG, 0, 3, WHITE) || isKingInCheck(boardG, 0, 2, WHITE));
+    return !(isKingInCheck(board, 0, 4, curSide) || isKingInCheck(board, 0, 3, curSide) || isKingInCheck(board, 0, 2, curSide));
   }
 }
 
@@ -362,7 +378,7 @@ int checkLegalMove(string move, Side curSide, int (&board)[8][8]) {
   // castles
   if ((move == "e1g1" || move == "e1c1" || move == "e8g8" || move == "e8c8") && pieceType == 6) {
     // DO KING CHECK CHECKS HERE
-    if (checkValidCastle(move)) {
+    if (checkValidCastle(move, curSide, board)) {
       int rLocation = (j1 == 6) ? 7 : 0;
       if (board[i1][rLocation] >> 1 != 2) {
         return -1;
@@ -374,9 +390,9 @@ int checkLegalMove(string move, Side curSide, int (&board)[8][8]) {
         }
         return 3;
       } else {
-        if (anyBlockers(board, i0, j0, i1, rLocation) || theyHaveMovedKing || (rLocation == 7 && weHaveMovedhRook) || (rLocation == 0 && weHaveMovedaRook)) {
+        if (anyBlockers(board, i0, j0, i1, rLocation) || theyHaveMovedKing || (rLocation == 7 && theyHaveMovedhRook) || (rLocation == 0 && theyHaveMovedaRook)) {
+          cout << anyBlockers(board, i0, j0, i1, rLocation) << theyHaveMovedKing << (rLocation == 7 && theyHaveMovedhRook) << (rLocation == 0 && theyHaveMovedaRook);
           guangDebug(113);
-          cout << theyHaveMovedKing << " HAHA" << endl;
           return -1;
         }
         return 3;
@@ -502,9 +518,9 @@ void makeMove(string move, Side side, int (&board)[8][8]) {
 
 
   int moveType = checkLegalMove(move, side, board);
-  if (side == WHITE) {
+  if (side == WHITE && board == boardG) {
     cout << "White plays a type " << moveType << endl;
-  } else {
+  } else if (board == boardG) {
     cout << "Black plays a type " << moveType << endl;
   }
   // -1 is illegal, 1 is normal, 2 is en passant, 3 is castle, 4 is promotion
