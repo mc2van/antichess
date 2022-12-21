@@ -70,7 +70,7 @@ void boardInit() {
   boardG[0][2] = 8;
   boardG[0][5] = 8;
   boardG[7][2] = 8;
-  //board[7][5] = 8;
+  boardG[7][5] = 8;
 
   // queen
   boardG[0][3] = 10;
