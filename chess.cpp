@@ -531,7 +531,7 @@ int main(int argc, char *argv[]) {
   if (string(argv[1]) == "white") {
     side = WHITE;
     oppside = BLACK;
-    cout << "e2e4";
+    cout << "e2e4" << endl;
     makeMove("e2e4", side, boardG);
   } else {
     side = BLACK;
