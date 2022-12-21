@@ -412,6 +412,19 @@ void makeMove(string move, Side side, int (&board)[8][8]);
 
 string chooseMove(vector<string> (&moves)[2], int (&board)[8][8]) {
   if (isKingInCheck(board, side)) {
+    for (int i = 0; i < moves[0].size(); i++) {
+      int newBoard[8][8];
+      for (int j = 0; j < 8; j++) {
+        for (int k = 0; k < 8; k++) {
+          newBoard[j][k] = board[j][k];
+        }
+      }
+      // remember to i-- when removing
+      makeMove(moves[0][i], side, newBoard);
+      if (isKingInCheck(newBoard, side)) {
+        moves[0].erase(moves[0].begin() + i--);
+      }
+    }
     for (int i = 0; i < moves[1].size(); i++) {
       int newBoard[8][8];
       for (int j = 0; j < 8; j++) {
@@ -421,19 +434,6 @@ string chooseMove(vector<string> (&moves)[2], int (&board)[8][8]) {
       }
       // remember to i-- when removing
       makeMove(moves[1][i], side, newBoard);
-      if (isKingInCheck(newBoard, side)) {
-        moves[1].erase(moves[1].begin() + i--);
-      }
-    }
-    for (int i = 0; i < moves[2].size(); i++) {
-      int newBoard[8][8];
-      for (int j = 0; j < 8; j++) {
-        for (int k = 0; k < 8; k++) {
-          newBoard[j][k] = board[j][k];
-        }
-      }
-      // remember to i-- when removing
-      makeMove(moves[2][i], side, newBoard);
       if (isKingInCheck(newBoard, side)) {
         moves[1].erase(moves[1].begin() + i--);
       }
