@@ -47,7 +47,7 @@ void boardInit() {
   // 12 = king
 
   // empty
-  for (int i = 2; i < 6; i++) {
+  for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
       boardG[i][j] = 0;
     }
@@ -88,7 +88,9 @@ void boardInit() {
   // black/white bit
   for(int i = 0; i < 2; i++) {
     for(int j = 0; j < 8; j++) {
-      boardG[i][j]++;
+      if (boardG[i][j]) {
+        boardG[i][j]++;
+      }
     }
   }
 }
@@ -406,14 +408,6 @@ int checkLegalMove(string move, Side curSide, int (&board)[8][8]) {
     pair<int, int> mv = moveset[pieceType][i];
     if (i0 + mv.first == i1 && j0 + mv.second == j1 && !anyBlockers(board, i0, j0, i1, j1)) {
       guangDebug(15);
-      if (i0 == (side == WHITE ? 7 : 0)) {
-        if (j0 == 0) {
-          weHaveMovedaRook = true;
-        }
-        if (j0 == 7) {
-          weHaveMovedhRook = true;
-        }
-      }
       return 1;
     }
   }
@@ -429,7 +423,7 @@ void getLegalMoves(vector<string> (&moves)[2], int (&board)[8][8]) {
   int compareSide = side;
 
   if (compareSide == -1) {
-    compareSide++;
+    compareSide = 0;
   }
 
   for(int i = 0; i < 8; i++) {
@@ -440,15 +434,17 @@ void getLegalMoves(vector<string> (&moves)[2], int (&board)[8][8]) {
         for (auto m : moveset[curPiece]) {
           int newX = i + m.first;
           int newY = j + m.second;
-          string moveString = stringifyCoord(i, j) + stringifyCoord(newX, newY);
-          int moveType = checkLegalMove(moveString, side, board);    
-          if (validIndex(newX, newY) && moveType != -1) {
-            if (board[newX][newY] != 0 || moveType == 2) {
-              //take move              
-              moves[1].push_back(moveString);
-            } else {
-              // just move
-              moves[0].push_back(moveString);
+          if (validIndex(newX, newY)) {
+            string moveString = stringifyCoord(i, j) + stringifyCoord(newX, newY);
+            int moveType = checkLegalMove(moveString, side, board);    
+            if (moveType != -1) {
+              if (board[newX][newY] != 0 || moveType == 2) {
+                //take move              
+                moves[1].push_back(moveString);
+              } else {
+                // just move
+                moves[0].push_back(moveString);
+              }
             }
           }
         }
@@ -516,7 +512,6 @@ void makeMove(string move, Side side, int (&board)[8][8]) {
   50-move rule
   */
 
-
   int moveType = checkLegalMove(move, side, board);
   if (side == WHITE && board == boardG) {
     cout << "White plays a type " << moveType << endl;
@@ -526,6 +521,7 @@ void makeMove(string move, Side side, int (&board)[8][8]) {
   // -1 is illegal, 1 is normal, 2 is en passant, 3 is castle, 4 is promotion
   if (moveType == -1) {
     // SnitchBot3000
+    cout << side << " " << move << " " << checkLegalMove(move, side, boardG) << endl;
     cout << "WARNING: ENEMY HAS PLAYED INVALID MOVE! INVALID MOVE! INVALID MOVE! WE WIN" << endl;
     cout << "WHAT THE FREAK (GUANG) THEIR BOT IS BROKEN WE WIN!!!" << endl;
     exit(1);
@@ -536,6 +532,16 @@ void makeMove(string move, Side side, int (&board)[8][8]) {
     int j0 = destringifyCoord(move, 2);
     int i1 = destringifyCoord(move, 3);
     int j1 = destringifyCoord(move, 4);
+
+    if (i0 == (side == WHITE ? 7 : 0) && board == boardG) {
+      if (j0 == 0) {
+        weHaveMovedaRook = true;
+      }
+      if (j0 == 7) {
+        weHaveMovedhRook = true;
+      }
+    }
+
     board[i0][j0] = 0;
     switch (move.at(4)) {
       case 'q':
@@ -559,6 +565,16 @@ void makeMove(string move, Side side, int (&board)[8][8]) {
     int j0 = destringifyCoord(move, 2);
     int i1 = destringifyCoord(move, 3);
     int j1 = destringifyCoord(move, 4);
+
+    if (i0 == (side == WHITE ? 7 : 0) && board == boardG) {
+      if (j0 == 0) {
+        weHaveMovedaRook = true;
+      }
+      if (j0 == 7) {
+        weHaveMovedhRook = true;
+      }
+    }
+
     board[i1][j1] = board[i0][j0];
     board[i0][j0] = 0;
     if (moveType == 2) {
@@ -592,17 +608,21 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
+  printBoard();
+
   if (string(argv[1]) == "white") {
     side = WHITE;
     oppside = BLACK;
+    movesetInit(side);
     cout << "e2e4" << endl;
     makeMove("e2e4", side, boardG);
+    // cout << "e1f1" << endl;
+    // makeMove("e1f1", side, boardG);
   } else {
     side = BLACK;
     oppside = WHITE;
+    movesetInit(side);
   }
-
-  movesetInit(side);
 
   printBoard();
 
