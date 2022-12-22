@@ -175,35 +175,37 @@ bool anyBlockers(int board[8][8], int i0, int j0, int i1, int j1) {
   if (pieceType == 3) {
     return false;
   } else {
-    if (i0 == i1) {
-      // vertical
+    if ((pieceType == 2 || pieceType == 5 || pieceType == 1) && (j0 != j1)) {
       for (int k = min(j0, j1) + 1; k < max(j0, j1); k++) {
         if (board[i0][k] != 0) return true;
       }
-    } else if (j0 == j1) {
-      // horizontal
+    }
+    if ((pieceType == 2 || pieceType == 5) && (i0 != i1)) {
       for (int k = min(i0, i1) + 1; k < max(i0, i1); k++) {
         if (board[k][j0] != 0) return true;
       }
-    } else {
-      // diagonal
-      int dir[] = {1, -1, -1, 1, 1};
-      for (int i = 0; i < 4; i++) {
-        int xOffset = dir[i];
-        int yOffset = dir[i + 1];
-        bool hitAThing = false;
-        for (int i = 0; i < 8; i++) {
-          if (!validIndex(i0 + (i * xOffset), j0 + (i * yOffset))) {
-            break;
-          }
-          if (i0 + (i * xOffset) == i1 && j0 + (i * yOffset) == j1) {
-            return hitAThing;
-          }
-          if (board[i0 + (i * xOffset)][j0 + (i * yOffset)] != 0) {
-            hitAThing = true;
-          }
-        }
+    } 
+    if ((pieceType == 4 || pieceType == 1 || pieceType == 6) && (j0 != j1) && (i0 != i1)) {
+      int dir[] = {abs(i0 - i1) / (i0 - i1), abs(j0 - j1) / (j0 - j1)};
+      for (int i = 1; i < abs(i0 - i1); i++) {
+        if (board[i0 - (dir[0] * i)][j0 - (dir[1] * i)] != 0) return true;
       }
+      // for (int i = 0; i < 4; i++) {
+      //   int xOffset = dir[i];
+      //   int yOffset = dir[i + 1];
+      //   bool hitAThing = false;
+      //   for (int i = 1; i < 9; i++) {
+      //     if (!validIndex(i0 + (i * xOffset), j0 + (i * yOffset))) {
+      //       break;
+      //     }
+      //     if (i0 + (i * xOffset) == i1 && j0 + (i * yOffset) == j1) {
+      //       return hitAThing;
+      //     }
+      //     if (board[i0 + (i * xOffset)][j0 + (i * yOffset)] != 0) {
+      //       hitAThing = true;
+      //     }
+      //   }
+      // }
     }
   }
   return false;
@@ -334,8 +336,8 @@ int checkLegalMove(string move, Side curSide, int board[8][8]) {
   // checks for promotion
   if (move.length() == 5) {
     if ((move.at(4) != 'q' && move.at(4) != 'r' && move.at(4) != 'b' && move.at(4) != 'n')
-    || (i0 != i1) || (curSide == WHITE && (j0 != 1 || j1 != 0)) 
-    || (curSide == BLACK && (j0 != 6 || j1 != 7))) {
+    || (j0 != j1) || (curSide == WHITE && (i0 != 1 || i1 != 0)) 
+    || (curSide == BLACK && (i0 != 6 || i1 != 7))) {
       guangDebug(4);
       return -1;
     }
@@ -602,16 +604,11 @@ void makeMove(string move, Side side, int board[8][8]) {
 
   int moveType = checkLegalMove(move, side, board);
   if (side == WHITE && board == boardG) {
-    cout << "White plays a type " << moveType << endl;
   } else if (board == boardG) {
-    cout << "Black plays a type " << moveType << endl;
   }
   // -1 is illegal, 1 is normal, 2 is en passant, 3 is castle, 4 is promotion
   if (moveType == -1) {
     // SnitchBot3000
-    cout << side << " " << move << " " << checkLegalMove(move, side, boardG) << endl;
-    cout << "WARNING: ENEMY HAS PLAYED INVALID MOVE! INVALID MOVE! INVALID MOVE! WE WIN" << endl;
-    cout << "WHAT THE FREAK (GUANG) THEIR BOT IS BROKEN WE WIN!!!" << endl;
     exit(1);
   }
   
@@ -683,11 +680,9 @@ void makeMove(string move, Side side, int board[8][8]) {
     board[i1][j1] = board[i0][j0];
     board[i0][j0] = 0;
     if (moveType == 2) {
-      cout << "meow" << endl;
       board[i0][j1] = 0;
     }
     if (moveType == 3) {
-      cout << "woof" << endl;
       board[i0][j1 - ((j1 - j0) / abs(j1 - j0))] = 4;
       if (side == BLACK) {
         board[i0][j1 - ((j1 - j0) / abs(j1 - j0))]++;
@@ -703,19 +698,12 @@ void makeMove(string move, Side side, int board[8][8]) {
   return;
 }
 
-string parseMove(string s) {
-  return "freegga";
-}
-
 int main(int argc, char *argv[]) {
   srand(time(0));
   boardInit();
   if (argc < 2) {
-    cout << "What the freak (guang)!";
     return 0;
   }
-
-  printBoard();
 
   if (string(argv[1]) == "white") {
     movesetInit(sideG, moveset);
@@ -725,8 +713,6 @@ int main(int argc, char *argv[]) {
     string initMove = "c2c3";
     cout << initMove << endl;
     makeMove(initMove, sideG, boardG);
-    // cout << "e1f1" << endl;
-    // makeMove("e1f1", side, boardG);
   } else {
     movesetInit(sideG, moveset);
     movesetInit(oppside, oppMoveset);
@@ -742,23 +728,7 @@ int main(int argc, char *argv[]) {
     makeMove(opp, oppside, boardG);
     vector<string> possibleMoves = getLegalMoves(boardG, sideG);
     us = chooseMove(possibleMoves, boardG);
-    cout << "Our Bot Plays: " << us << endl;
+    cout << us << endl;
     makeMove(us, sideG, boardG);
-    printBoard();
-    // cout << us;
   }
-
-  /*
-
-  string s;
-  while (true)
-  {
-    getline(cin, s);
-    prevMove = s;
-    string move = parseMove(s);
-    cout << move;
-  }
-  return 0;
-
-  */ 
 }
