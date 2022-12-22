@@ -193,22 +193,6 @@ bool anyBlockers(int board[8][8], int i0, int j0, int i1, int j1) {
       for (int i = 1; i < abs(i0 - i1); i++) {
         if (board[i0 - (dir[0] * i)][j0 - (dir[1] * i)] != 0) return true;
       }
-      // for (int i = 0; i < 4; i++) {
-      //   int xOffset = dir[i];
-      //   int yOffset = dir[i + 1];
-      //   bool hitAThing = false;
-      //   for (int i = 1; i < 9; i++) {
-      //     if (!validIndex(i0 + (i * xOffset), j0 + (i * yOffset))) {
-      //       break;
-      //     }
-      //     if (i0 + (i * xOffset) == i1 && j0 + (i * yOffset) == j1) {
-      //       return hitAThing;
-      //     }
-      //     if (board[i0 + (i * xOffset)][j0 + (i * yOffset)] != 0) {
-      //       hitAThing = true;
-      //     }
-      //   }
-      // }
     }
   }
   return false;
