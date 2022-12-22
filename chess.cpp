@@ -9,6 +9,9 @@
 #include <vector>
 #include <cstdlib>
 
+// Happy Holidays! Thank you Prof Jao and TAs for the course, we learned a lot and thoroughly enjoyed it!
+// All the best, Evan + Leon
+
 using namespace std;
 
 enum Side {
