@@ -580,7 +580,7 @@ string gigaGuang(int board[8][8]) {
       }
     }
     makeMove(move, sideG, newBoard);
-    int ret = sillybilly(board, false, INT_MIN, INT_MAX, 5);
+    int ret = sillybilly(board, false, INT_MIN, INT_MAX, 4);
     if (maxVal <= ret) {
       res = move;
       maxVal = ret;
