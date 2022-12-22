@@ -587,11 +587,12 @@ string gigaGuang(int board[8][8]) {
 }
 
 string chooseMove(vector<string> moves, int board[8][8]) {
+  string moveMade;
   if (moves.size()) {
     string moveMade = gigaGuang(board);
     return moveMade;
   } else {
-    return "NO MOVE POSSIBLE";
+    return "gg";
   }
 }
 
@@ -706,18 +707,18 @@ int main(int argc, char *argv[]) {
   }
 
   if (string(argv[1]) == "white") {
-    movesetInit(sideG, moveset);
-    movesetInit(oppside, oppMoveset);
     sideG = WHITE;
     oppside = BLACK;
+    movesetInit(sideG, moveset);
+    movesetInit(oppside, oppMoveset);
     string initMove = "c2c3";
     cout << initMove << endl;
     makeMove(initMove, sideG, boardG);
   } else {
-    movesetInit(sideG, moveset);
-    movesetInit(oppside, oppMoveset);
     sideG = BLACK;
     oppside = WHITE;
+    movesetInit(sideG, moveset);
+    movesetInit(oppside, oppMoveset);
   }
 
   string opp;
@@ -730,5 +731,6 @@ int main(int argc, char *argv[]) {
     us = chooseMove(possibleMoves, boardG);
     cout << us << endl;
     makeMove(us, sideG, boardG);
+    numOfMoves += 2;
   }
 }
