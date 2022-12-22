@@ -64,9 +64,36 @@ void movesetInit() {
   moveset[6].push_back(make_pair(-1, -1));
 }
 
+void try1(vector<vector<string> > &test) {
+  test[0][0] = "3";
+}
+
+void try2(vector<vector<string> > test) {
+  test[0][0] = "4";
+}
+
 int main() {
     movesetInit();
-    for(auto i : moveset[6]) {
-        cout << i.first << i.second;
+    vector<vector<string> > test;
+    test.push_back(vector<string>());
+    test.push_back(vector<string>());
+    test[0].push_back("0");
+    test[1].push_back("1");
+    for (int i = 0; i < 2; i++) {
+      for (int j = 0; j < test[i].size(); j++) {
+        cout << test[i][j] << endl;
+      }
+    }
+    try1(test);
+    for (int i = 0; i < 2; i++) {
+      for (int j = 0; j < test[i].size(); j++) {
+        cout << test[i][j] << endl;
+      }
+    }
+    try2(test);
+    for (int i = 0; i < 2; i++) {
+      for (int j = 0; j < test[i].size(); j++) {
+        cout << test[i][j] << endl;
+      }
     }
 }

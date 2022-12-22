@@ -15,11 +15,11 @@ enum Side {
   BLACK = 1
 };
 
-Side side;
+Side sideG;
 Side oppside;
 int boardG[8][8];
 vector<pair<int, int> > moveset[7];
-vector<string> movesG[2];
+vector<pair<int, int> > oppMoveset[7];
 
 // castling booleans
 bool weHaveMovedKing = false;
@@ -33,6 +33,7 @@ bool theyHaveMovedhRook = false;
 // en passant check
 string prevMove;
 
+void makeMove(string move, Side side, int board[8][8]);
 
 void boardInit() {
   // board[number][letter] (normal 2D array expression)
@@ -54,32 +55,32 @@ void boardInit() {
   }
 
   // pawn
-  for (int i = 0; i < 8; i++) {
-    boardG[1][i] = 2;
-    boardG[6][i] = 2;
-  }
+  // for (int i = 0; i < 8; i++) {
+  //   boardG[1][i] = 2;
+  //   boardG[6][i] = 2;
+  // }
 
   // rook
-  boardG[0][0] = 4;
-  boardG[0][7] = 4;
+  // boardG[0][0] = 4;
+  // boardG[0][7] = 4;
   boardG[7][0] = 4;
   boardG[7][7] = 4;
 
   // knight
-  boardG[0][1] = 6;
-  boardG[0][6] = 6;
-  boardG[7][1] = 6;
-  boardG[7][6] = 6;
+  // boardG[0][1] = 6;
+  // boardG[0][6] = 6;
+  // boardG[7][1] = 6;
+  // boardG[7][6] = 6;
 
   // bishop
-  boardG[0][2] = 8;
-  boardG[0][5] = 8;
-  boardG[7][2] = 8;
-  boardG[7][5] = 8;
+  // boardG[0][2] = 8;
+  // boardG[0][5] = 8;
+  // boardG[7][2] = 8;
+  // boardG[7][5] = 8;
 
   // queen
-  boardG[0][3] = 10;
-  boardG[7][3] = 10;
+  // boardG[0][3] = 10;
+  // boardG[7][3] = 10;
 
   // king
   boardG[0][4] = 12;
@@ -104,7 +105,7 @@ void printBoard() {
   }
 }
 
-void movesetInit(Side moveSide) {
+void movesetInit(Side moveSide, vector<pair<int, int> > (&moveset)[7]) {
   // pawn
   moveset[1].push_back(make_pair(moveSide, 0));
   moveset[1].push_back(make_pair(moveSide, 1));
@@ -162,7 +163,7 @@ void movesetInit(Side moveSide) {
   moveset[6].push_back(make_pair(0, -2));
 }
 
-bool anyBlockers(int (&board)[8][8], int i0, int j0, int i1, int j1) {
+bool anyBlockers(int board[8][8], int i0, int j0, int i1, int j1) {
   int piece = board[i0][j0];
   Side pieceSide = (piece & 1) == 1 ? BLACK : WHITE;
   int pieceType = piece >> 1;
@@ -203,7 +204,7 @@ bool anyBlockers(int (&board)[8][8], int i0, int j0, int i1, int j1) {
   return false;
 }
 
-bool isKingInCheck(int (&board)[8][8], int x, int y, Side kingSide) {
+bool isKingInCheck(int board[8][8], int x, int y, Side kingSide) {
   pair<int, int> kingLoc;
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
@@ -237,7 +238,7 @@ bool isKingInCheck(int (&board)[8][8], int x, int y, Side kingSide) {
   return false;
 }
 
-bool isKingInCheck(int (&board)[8][8], Side kingSide) {
+bool isKingInCheck(int board[8][8], Side kingSide) {
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
       Side pieceSide = (board[i][j] & 1) == 1 ? BLACK : WHITE;
@@ -282,7 +283,7 @@ void guangDebug(int i) {
   //cout << "here" << i;
 }
 
-bool checkValidCastle(string move, Side curSide, int (&board)[8][8]) {
+bool checkValidCastle(string move, Side curSide, int board[8][8]) {
   if (move == "e1g1") {
     return !(isKingInCheck(board, 7, 4, curSide) || isKingInCheck(board, 7, 5, curSide) || isKingInCheck(board, 7, 6, curSide));
   } else if (move == "e1c1") {
@@ -294,7 +295,7 @@ bool checkValidCastle(string move, Side curSide, int (&board)[8][8]) {
   }
 }
 
-int checkLegalMove(string move, Side curSide, int (&board)[8][8]) {
+int checkLegalMove(string move, Side curSide, int board[8][8]) {
   // -1 is illegal, 1 is normal, 2 is en passant, 3 is castle, 4 is promotion
   // illegal move length
   if (move.length() < 4 || move.length() > 5) {
@@ -339,7 +340,7 @@ int checkLegalMove(string move, Side curSide, int (&board)[8][8]) {
     if (j1 == j0) {
       guangDebug(6);
       // straight moving pawn
-      if (side * (i1 - i0) > 2 || curSide * (i1 - i0) <= 0) {
+      if (curSide * (i1 - i0) > 2 || curSide * (i1 - i0) <= 0) {
         guangDebug(7);
         return -1;
       }
@@ -385,7 +386,7 @@ int checkLegalMove(string move, Side curSide, int (&board)[8][8]) {
       if (board[i1][rLocation] >> 1 != 2) {
         return -1;
       }
-      if (curSide == side) {
+      if (curSide == sideG) {
         if (anyBlockers(board, i0, j0, i1, rLocation) || weHaveMovedKing || (rLocation == 7 && weHaveMovedhRook) || (rLocation == 0 && weHaveMovedaRook)) {
           guangDebug(13);
           return -1;
@@ -393,7 +394,6 @@ int checkLegalMove(string move, Side curSide, int (&board)[8][8]) {
         return 3;
       } else {
         if (anyBlockers(board, i0, j0, i1, rLocation) || theyHaveMovedKing || (rLocation == 7 && theyHaveMovedhRook) || (rLocation == 0 && theyHaveMovedaRook)) {
-          cout << anyBlockers(board, i0, j0, i1, rLocation) << theyHaveMovedKing << (rLocation == 7 && theyHaveMovedhRook) << (rLocation == 0 && theyHaveMovedaRook);
           guangDebug(113);
           return -1;
         }
@@ -415,11 +415,8 @@ int checkLegalMove(string move, Side curSide, int (&board)[8][8]) {
   return -1;
 }
 
-void getLegalMoves(vector<string> (&moves)[2], int (&board)[8][8]) {
-  for(int i = 0; i < 2; i++) {
-    moves[i].clear();
-  }
-
+vector<string> getLegalMoves(int board[8][8], Side side) {
+  vector<string> moves[2];
   int compareSide = side;
 
   if (compareSide == -1) {
@@ -451,11 +448,6 @@ void getLegalMoves(vector<string> (&moves)[2], int (&board)[8][8]) {
       }
     }
   }
-}
-
-void makeMove(string move, Side side, int (&board)[8][8]);
-
-string chooseMove(vector<string> (&moves)[2], int (&board)[8][8]) {
   for (int i = 0; i < moves[0].size(); i++) {
     int newBoard[8][8];
     for (int j = 0; j < 8; j++) {
@@ -482,28 +474,57 @@ string chooseMove(vector<string> (&moves)[2], int (&board)[8][8]) {
       moves[1].erase(moves[1].begin() + i--);
     }
   }
-  if (moves[1].size()) {
-    // take move
-    string moveMade = moves[1][rand() % moves[1].size()];
-    if (board[destringifyCoord(moveMade, 1)][destringifyCoord(moveMade, 2)] >> 1 == 6) {
-      weHaveMovedKing = true;
-    }
-    return moveMade;
-  } else {
-    // other move
-    if (moves[0].size()) {
-      string moveMade = moves[0][rand() % moves[0].size()];
-      if (board[destringifyCoord(moveMade, 1)][destringifyCoord(moveMade, 2)] >> 1 == 6) {
-        weHaveMovedKing = true;
+  cout << moves[0].size() << " " << moves[1].size() << " LALA" << endl;
+  return (moves[1].size() > 0) ? moves[1] : moves[0];
+}
+
+int gigaEval(int board[8][8]) {
+  return 0;
+}
+
+int sillybilly(int board[8][8], bool usPlaying, int a, int b, int depth) {
+  if (depth == 0) {
+    return gigaEval(board);
+  }
+  Side curSide = usPlaying ? sideG : oppside;
+  vector<string> possibleMoves = getLegalMoves(board, curSide);
+  if (usPlaying) {
+    int bestValue = INT_MIN;
+    for (string move : possibleMoves) {
+      int newBoard[8][8];
+      for (int j = 0; j < 8; j++) {
+        for (int k = 0; k < 8; k++) {
+          newBoard[j][k] = board[j][k];
+        }
       }
-      return moveMade;
-    } else {
-      return "NO MOVE POSSIBLE";
+      makeMove(move, curSide, newBoard);
+      int ret = sillybilly(board, false, a, b, depth - 1);
+
     }
   }
 }
 
-void makeMove(string move, Side side, int (&board)[8][8]) {
+pair<int, string> gigaGuang(int board[8][8], vector<string> moves[2], Side curSide, int depth, string toMove) {
+  int ind = (moves[1].size() == 0) ? 0 : 1;
+  pair<int, string> res;
+  if (curSide == sideG) {
+    for (int i = 0; i < moves[ind].size(); i++) {
+    }
+  } else {
+
+  }
+}
+
+string chooseMove(vector<string> moves, int board[8][8]) {
+  if (moves.size()) {
+    string moveMade = moves[0];
+    return moveMade;
+  } else {
+    return "NO MOVE POSSIBLE";
+  }
+}
+
+void makeMove(string move, Side side, int board[8][8]) {
   /*
   Castling
   En passant
@@ -568,10 +589,27 @@ void makeMove(string move, Side side, int (&board)[8][8]) {
 
     if (i0 == (side == WHITE ? 7 : 0) && board == boardG) {
       if (j0 == 0) {
-        weHaveMovedaRook = true;
+        if (side == sideG) {
+          weHaveMovedaRook = true;
+        } else {
+          theyHaveMovedaRook = true;
+        }
       }
       if (j0 == 7) {
-        weHaveMovedhRook = true;
+        if (side == sideG) {
+          weHaveMovedhRook = true;
+        } else {
+          theyHaveMovedhRook = true;
+        }
+      }
+    }
+
+    if (board[destringifyCoord(move, 1)][destringifyCoord(move, 2)] >> 1 == 6
+    && board == boardG) {
+      if (side == sideG) {
+        weHaveMovedKing = true;
+      } else {
+        theyHaveMovedKing = true;
       }
     }
 
@@ -611,43 +649,32 @@ int main(int argc, char *argv[]) {
   printBoard();
 
   if (string(argv[1]) == "white") {
-    side = WHITE;
+    movesetInit(sideG, moveset);
+    movesetInit(oppside, oppMoveset);
+    sideG = WHITE;
     oppside = BLACK;
-    movesetInit(side);
-    cout << "e2e4" << endl;
-    makeMove("e2e4", side, boardG);
+    string initMove = "e1f1";
+    cout << initMove << endl;
+    makeMove(initMove, sideG, boardG);
     // cout << "e1f1" << endl;
     // makeMove("e1f1", side, boardG);
   } else {
-    side = BLACK;
+    movesetInit(sideG, moveset);
+    movesetInit(oppside, oppMoveset);
+    sideG = BLACK;
     oppside = WHITE;
-    movesetInit(side);
   }
-
-  printBoard();
 
   string opp;
   string us;
   while(true) {
     cin >> opp;
     prevMove = opp;
-    bool kingMove = boardG[destringifyCoord(opp, 1)][destringifyCoord(opp, 2)] >> 1 == 6;
     makeMove(opp, oppside, boardG);
-    if (kingMove) {
-      theyHaveMovedKing = true;
-    }
-    if (destringifyCoord(opp, 1) == (oppside == WHITE ? 7 : 0)) {
-      if (destringifyCoord(opp, 2) == 0) {
-        theyHaveMovedaRook = true;
-      }
-      if (destringifyCoord(opp, 2) == 7) {
-        theyHaveMovedhRook = true;
-      }
-    }
-    getLegalMoves(movesG, boardG);
-    us = chooseMove(movesG, boardG);
+    vector<string> possibleMoves = getLegalMoves(boardG, sideG);
+    us = chooseMove(possibleMoves, boardG);
     cout << "Our Bot Plays: " << us << endl;
-    makeMove(us, side, boardG);
+    makeMove(us, sideG, boardG);
     printBoard();
     // cout << us;
   }
