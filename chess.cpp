@@ -598,8 +598,6 @@ void makeMove(string move, Side side, int board[8][8]) {
   Castling
   En passant
   Pawn advance by two spaces
-  Draw by repetition
-  50-move rule
   */
 
   int moveType = checkLegalMove(move, side, board);
@@ -724,7 +722,7 @@ int main(int argc, char *argv[]) {
     movesetInit(oppside, oppMoveset);
     sideG = WHITE;
     oppside = BLACK;
-    string initMove = "e1f1";
+    string initMove = "c2c3";
     cout << initMove << endl;
     makeMove(initMove, sideG, boardG);
     // cout << "e1f1" << endl;
