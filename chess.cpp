@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <map>
 #include <queue>
 #include <sstream>
 #include <string>
@@ -20,6 +21,7 @@ Side oppside;
 int boardG[8][8];
 vector<pair<int, int> > moveset[7];
 vector<pair<int, int> > oppMoveset[7];
+int numOfMoves;
 
 // castling booleans
 bool weHaveMovedKing = false;
@@ -163,6 +165,8 @@ void movesetInit(Side moveSide, vector<pair<int, int> > (&moveset)[7]) {
   moveset[6].push_back(make_pair(0, -2));
 }
 
+bool validIndex(int i, int j);
+
 bool anyBlockers(int board[8][8], int i0, int j0, int i1, int j1) {
   int piece = board[i0][j0];
   Side pieceSide = (piece & 1) == 1 ? BLACK : WHITE;
@@ -183,19 +187,20 @@ bool anyBlockers(int board[8][8], int i0, int j0, int i1, int j1) {
       }
     } else {
       // diagonal
-      if ((i0 < i1 && j0 < j1) || (i1 < i0 && j1 < j0)) {
-        // (/) diagonal like that
-        for (int k = min(i0, i1) + 1; k < max(i0, i1); k++) {
-          for (int l = min(j0, j1) + 1; l < max(j0, j1); l++) {
-            if (k - i0 == l - j0 && board[k][l] != 0) return true;
+      int dir[] = {1, -1, -1, 1, 1};
+      for (int i = 0; i < 4; i++) {
+        int xOffset = dir[i];
+        int yOffset = dir[i + 1];
+        bool hitAThing = false;
+        for (int i = 0; i < 8; i++) {
+          if (!validIndex(i0 + (i * xOffset), j0 + (i * yOffset))) {
+            break;
           }
-        }
-      } else {
-        // (\) diagonal like that
-        // this might be wrong
-        for (int k = i0 - 1; k > i1; k--) {
-          for (int l = j0 + 1; l < j1; l++) {
-            if (i0 - k == l - j0 && board[k][l] != 0) return true;
+          if (i0 + (i * xOffset) == i1 && j0 + (i * yOffset) == j1) {
+            return hitAThing;
+          }
+          if (board[i0 + (i * xOffset)][j0 + (i * yOffset)] != 0) {
+            hitAThing = true;
           }
         }
       }
@@ -248,6 +253,7 @@ bool isKingInCheck(int board[8][8], Side kingSide) {
       }
     }
   }
+  return false;
 }
 
 bool validIndex(int i, int j) {
@@ -276,6 +282,7 @@ int destringifyCoord(string move, int ind) {
       return move.at(2) - 'a';
       break;
   }
+  return -1;
 }
 
 void guangDebug(int i) {
@@ -448,6 +455,7 @@ vector<string> getLegalMoves(int board[8][8], Side side) {
       }
     }
   }
+
   for (int i = 0; i < moves[0].size(); i++) {
     int newBoard[8][8];
     for (int j = 0; j < 8; j++) {
@@ -477,17 +485,37 @@ vector<string> getLegalMoves(int board[8][8], Side side) {
   return (moves[1].size() > 0) ? moves[1] : moves[0];
 }
 
+
 int gigaEval(int board[8][8]) {
-  int res = 0;
+  map<int, int> pieceValues;
+  pieceValues.insert(make_pair(1, 1));
+  pieceValues.insert(make_pair(2, 4));
+  pieceValues.insert(make_pair(3, 4));
+  pieceValues.insert(make_pair(4, 3));
+  pieceValues.insert(make_pair(5, 6));
+  pieceValues.insert(make_pair(6, 10000));
+  int adjSide = (sideG == WHITE) ? 0 : 1;
+  int kingSafety = isKingInCheck(board, sideG) ? -11 : 5;
+  int freedom = getLegalMoves(board, sideG).size() * 7;
+  if (freedom == 0) {
+    freedom = -10000;
+  }
+  int piecesDiff = 0;
+  int numPieces = 0;
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      if ((board[i][j] & 1) == sideG) {
-        res += (board[i][j] >> 1);
-      } else {
-        res -= (board[i][j] >> 1);
+      numPieces++;
+      if (board[i][j] != 0) {
+        if ((board[i][j] & 1) == adjSide) {
+          piecesDiff += pieceValues[board[i][j] >> 1];
+        } else {
+          piecesDiff -= pieceValues[board[i][j] >> 1];
+        }
       }
     }
   }
+  piecesDiff += 16 * ((32 - numPieces) / 32);
+  return kingSafety + freedom + piecesDiff;
 }
 
 int sillybilly(int board[8][8], bool usPlaying, int a, int b, int depth) {
@@ -548,8 +576,9 @@ string gigaGuang(int board[8][8]) {
     }
     makeMove(move, sideG, newBoard);
     int ret = sillybilly(board, false, INT_MIN, INT_MAX, 5);
-    if (maxVal < ret) {
+    if (maxVal <= ret) {
       res = move;
+      maxVal = ret;
     }
   }
   return res;
@@ -656,9 +685,11 @@ void makeMove(string move, Side side, int board[8][8]) {
     board[i1][j1] = board[i0][j0];
     board[i0][j0] = 0;
     if (moveType == 2) {
+      cout << "meow" << endl;
       board[i0][j1] = 0;
     }
     if (moveType == 3) {
+      cout << "woof" << endl;
       board[i0][j1 - ((j1 - j0) / abs(j1 - j0))] = 4;
       if (side == BLACK) {
         board[i0][j1 - ((j1 - j0) / abs(j1 - j0))]++;
