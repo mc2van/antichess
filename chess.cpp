@@ -55,32 +55,32 @@ void boardInit() {
   }
 
   // pawn
-  // for (int i = 0; i < 8; i++) {
-  //   boardG[1][i] = 2;
-  //   boardG[6][i] = 2;
-  // }
+  for (int i = 0; i < 8; i++) {
+    boardG[1][i] = 2;
+    boardG[6][i] = 2;
+  }
 
-  // rook
-  // boardG[0][0] = 4;
-  // boardG[0][7] = 4;
+  //rook
+  boardG[0][0] = 4;
+  boardG[0][7] = 4;
   boardG[7][0] = 4;
   boardG[7][7] = 4;
 
   // knight
-  // boardG[0][1] = 6;
-  // boardG[0][6] = 6;
-  // boardG[7][1] = 6;
-  // boardG[7][6] = 6;
+  boardG[0][1] = 6;
+  boardG[0][6] = 6;
+  boardG[7][1] = 6;
+  boardG[7][6] = 6;
 
   // bishop
-  // boardG[0][2] = 8;
-  // boardG[0][5] = 8;
-  // boardG[7][2] = 8;
-  // boardG[7][5] = 8;
+  boardG[0][2] = 8;
+  boardG[0][5] = 8;
+  boardG[7][2] = 8;
+  boardG[7][5] = 8;
 
   // queen
-  // boardG[0][3] = 10;
-  // boardG[7][3] = 10;
+  boardG[0][3] = 10;
+  boardG[7][3] = 10;
 
   // king
   boardG[0][4] = 12;
@@ -474,12 +474,20 @@ vector<string> getLegalMoves(int board[8][8], Side side) {
       moves[1].erase(moves[1].begin() + i--);
     }
   }
-  cout << moves[0].size() << " " << moves[1].size() << " LALA" << endl;
   return (moves[1].size() > 0) ? moves[1] : moves[0];
 }
 
 int gigaEval(int board[8][8]) {
-  return 0;
+  int res = 0;
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
+      if ((board[i][j] & 1) == sideG) {
+        res += (board[i][j] >> 1);
+      } else {
+        res -= (board[i][j] >> 1);
+      }
+    }
+  }
 }
 
 int sillybilly(int board[8][8], bool usPlaying, int a, int b, int depth) {
@@ -489,7 +497,7 @@ int sillybilly(int board[8][8], bool usPlaying, int a, int b, int depth) {
   Side curSide = usPlaying ? sideG : oppside;
   vector<string> possibleMoves = getLegalMoves(board, curSide);
   if (usPlaying) {
-    int bestValue = INT_MIN;
+    int highest = INT_MIN;
     for (string move : possibleMoves) {
       int newBoard[8][8];
       for (int j = 0; j < 8; j++) {
@@ -499,25 +507,57 @@ int sillybilly(int board[8][8], bool usPlaying, int a, int b, int depth) {
       }
       makeMove(move, curSide, newBoard);
       int ret = sillybilly(board, false, a, b, depth - 1);
-
+      highest = max(highest, ret);
+      a = max(a, ret);
+      if (b <= a) {
+        break;
+      }
     }
+    return highest;
+  } else {
+    int lowest = INT_MAX;
+    for (string move : possibleMoves) {
+      int newBoard[8][8];
+      for (int j = 0; j < 8; j++) {
+        for (int k = 0; k < 8; k++) {
+          newBoard[j][k] = board[j][k];
+        }
+      }
+      makeMove(move, curSide, newBoard);
+      int ret = sillybilly(board, true, a, b, depth - 1);
+      lowest = min(lowest, ret);
+      b = min(b, ret);
+      if (b <= a) {
+        break;
+      }
+    }
+    return lowest;
   }
 }
 
-pair<int, string> gigaGuang(int board[8][8], vector<string> moves[2], Side curSide, int depth, string toMove) {
-  int ind = (moves[1].size() == 0) ? 0 : 1;
-  pair<int, string> res;
-  if (curSide == sideG) {
-    for (int i = 0; i < moves[ind].size(); i++) {
+string gigaGuang(int board[8][8]) {
+  int maxVal = INT_MIN;
+  string res;
+  vector<string> possibleMoves = getLegalMoves(board, sideG);
+  for (string move : possibleMoves) {
+    int newBoard[8][8];
+    for (int j = 0; j < 8; j++) {
+      for (int k = 0; k < 8; k++) {
+        newBoard[j][k] = board[j][k];
+      }
     }
-  } else {
-
+    makeMove(move, sideG, newBoard);
+    int ret = sillybilly(board, false, INT_MIN, INT_MAX, 5);
+    if (maxVal < ret) {
+      res = move;
+    }
   }
+  return res;
 }
 
 string chooseMove(vector<string> moves, int board[8][8]) {
   if (moves.size()) {
-    string moveMade = moves[0];
+    string moveMade = gigaGuang(board);
     return moveMade;
   } else {
     return "NO MOVE POSSIBLE";
